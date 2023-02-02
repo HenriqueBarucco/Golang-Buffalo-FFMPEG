@@ -4,13 +4,13 @@ import (
 	"net/http"
 
 	"teste/locales"
-	"teste/models"
+
+	// "teste/models"
 	"teste/public"
 
 	"github.com/gobuffalo/buffalo"
-	"github.com/gobuffalo/buffalo-pop/v3/pop/popmw"
+	// "github.com/gobuffalo/buffalo-pop/v3/pop/popmw"
 	"github.com/gobuffalo/envy"
-	csrf "github.com/gobuffalo/mw-csrf"
 	forcessl "github.com/gobuffalo/mw-forcessl"
 	i18n "github.com/gobuffalo/mw-i18n/v2"
 	paramlogger "github.com/gobuffalo/mw-paramlogger"
@@ -54,16 +54,39 @@ func App() *buffalo.App {
 
 		// Protect against CSRF attacks. https://www.owasp.org/index.php/Cross-Site_Request_Forgery_(CSRF)
 		// Remove to disable this.
-		app.Use(csrf.New)
 
 		// Wraps each request in a transaction.
 		//   c.Value("tx").(*pop.Connection)
 		// Remove to disable this.
-		app.Use(popmw.Transaction(models.DB))
+		// app.Use(popmw.Transaction(models.DB))
 		// Setup and use translations:
 		app.Use(translations())
 
 		app.GET("/", HomeHandler)
+
+		api_v1 := app.Group("/v1/")
+
+		api_v1.POST("login", UsersLogin)
+
+		record := api_v1.Group("/record/")
+		record.Use(RestrictedHandlerMiddleware)
+		record.POST("antena", AntenaHandler)
+		record.GET("cam", CamHandler)
+
+		stream := api_v1.Group("/stream/")
+		stream.Use(RestrictedHandlerMiddleware)
+		stream.GET("start/{feed}", StartStreamCamHandler)
+		stream.POST("start", StartRTSPStreamHandler)
+		stream.GET("stop/{feed}", StopStreamCamHandler)
+		stream.GET("list", ListStreamHandler)
+
+		crud := api_v1.Group("/crud/")
+		crud.Use(RestrictedHandlerMiddleware)
+		crud.POST("users/insert", InsertHandler)
+		crud.GET("users", SelectHandler)
+		crud.GET("users/{id}", SelectIdHandler)
+		crud.DELETE("users/{id}", DeleteIdHandler)
+		crud.PUT("users", UpdateIdHandler)
 
 		app.ServeFiles("/", http.FS(public.FS())) // serve files from the public directory
 	}
