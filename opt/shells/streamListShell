@@ -1,0 +1,11 @@
+#! /bin/bash
+
+for item in 1 2 3
+do
+    i=`ps ax | grep ffmpeg | grep cam$item | awk '{print $1}'`
+    if [ ! -z $i ]; then
+        retorno="$retorno cam$item"
+    fi
+done
+
+echo $retorno

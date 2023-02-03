@@ -1,0 +1,5 @@
+#! /bin/bash
+
+feed=$1
+
+ffmpeg -y -re -f v4l2 -i /dev/video0 -tune zerolatency -c:v libx264 -f ffm http://localhost:6563/$feed.ffm 2> /dev/null &

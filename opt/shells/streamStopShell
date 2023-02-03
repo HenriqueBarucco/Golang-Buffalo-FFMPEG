@@ -1,0 +1,15 @@
+#! /bin/bash
+
+feed=$1
+date=`date +%d-%m-%Y`
+dateWithTime=`date +%d-%m-%Y__%H:%M:%S`
+
+pid=`ps ax | grep -w 'ffmpeg' | grep -w "$feed" | awk '{print $1}'`
+kill $pid
+
+mkdir "/opt/$date"
+mv -f "/var/www/html/cms/ffserver/feed/$feed.ffm" "/opt/$date/$dateWithTime.ffm"
+
+cp /opt/empty.ffm /var/www/html/cms/ffserver/feed/$feed.ffm
+
+ffmpeg -y -i "/opt/$date/$dateWithTime.ffm" -b:v 28k -vcodec libvpx "/opt/$date/$dateWithTime.webm" 2> /dev/null &
